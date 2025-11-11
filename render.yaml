@@ -5,6 +5,9 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
-      - key: brzcapital@gmail.com_wEH1luD5OlAmE0IkNAVlTiUR2ytUnCcfdEkgFxDWEJFYIQsuZxrJkQP1Qeo0ofZJ
+      - key: OPENAI_API_KEY
         sync: false
+      # Opcional: para travar CORS na sua origem Bubble:
+      # - key: BUBBLE_ORIGIN
+      #   value: https://seu-app.bubbleapps.io
     plan: free
