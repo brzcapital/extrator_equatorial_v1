@@ -8,7 +8,7 @@ from datetime import datetime
 
 app = FastAPI(title="Extrator Equatorial Goiás", version="1.0")
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("brzcapital@gmail.com_wEH1luD5OlAmE0IkNAVlTiUR2ytUnCcfdEkgFxDWEJFYIQsuZxrJkQP1Qeo0ofZJ")
 
 def extract_text_from_pdf(pdf_file):
     text = ""
