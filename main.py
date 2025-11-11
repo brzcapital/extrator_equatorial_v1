@@ -2,7 +2,10 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import pdfplumber
 import json
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("brzcapital@gmail.com_wEH1luD5OlAmE0IkNAVlTiUR2ytUnCcfdEkgFxDWEJFYIQsuZxrJkQP1Qeo0ofZJ"))
+
 import os
 from datetime import datetime
 
@@ -34,7 +37,7 @@ async def extract_data(file: UploadFile = File(...)):
             {"role": "user", "content": text}
         ]
 
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-5",
             messages=messages,
             temperature=0.2,
