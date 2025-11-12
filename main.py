@@ -20,14 +20,50 @@ def extract_text_from_pdf(pdf_path: str) -> str:
             texto += page_text + "\n"
     return texto.strip()
 
-# Endpoint principal para upload e extração
+# Endpoint principal de extração
 @app.post("/extract")
 async def extract(file: UploadFile = File(...)):
     try:
-        # Cria um arquivo temporário no container
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
+
+        texto_extraido = extract_text_from_pdf(tmp_path)
+        os.remove(tmp_path)
+
+        response = client.chat.completions.create(
+            model="gpt-5",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um extrator especializado de dados de faturas da Equatorial Goiás. "
+                        "Sua tarefa é ler o texto abaixo e retornar um objeto JSON estruturado "
+                        "com todos os campos definidos no modelo 'faturaequatorial'."
+                    ),
+                },
+                {"role": "user", "content": texto_extraido},
+            ],
+            temperature=0.2,
+            max_tokens=2500,
+        )
+
+        resultado = response.choices[0].message.content
+        return JSONResponse(content={"resultado": resultado})
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+# ✅ Adiciona rota raiz e healthcheck
+@app.get("/")
+async def root():
+    return {"status": "Extrator Equatorial Goiás ativo 🚀", "versao": "1.0"}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 
         # Extrai o texto do PDF
         texto_extraido = extract_text_from_pdf(tmp_path)
