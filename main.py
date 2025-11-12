@@ -19,6 +19,7 @@ APP_VERSION = "1.1"
 
 # OpenAI Client (API nova)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+response = client.chat.completions.create(...)
 
 # Carrega prompt base uma vez
 with open("prompt_equatorial_v1.txt", "r", encoding="utf-8") as f:
