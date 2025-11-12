@@ -2,35 +2,37 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from openai import OpenAI
 import pdfplumber
-import os
 import tempfile
+import os
 
-# Inicializa o app FastAPI
 app = FastAPI(title="Extrator Equatorial Goiás", version="1.0")
 
-# Cliente OpenAI com a variável de ambiente configurada no Render
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Função para extrair texto de um PDF
 def extract_text_from_pdf(pdf_path: str) -> str:
     texto = ""
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
-            page_text = page.extract_text() or ""
-            texto += page_text + "\n"
+            texto += (page.extract_text() or "") + "\n"
     return texto.strip()
 
-# Endpoint principal de extração
+@app.get("/")
+async def root():
+    return {"status": "ok", "mensagem": "API Extrator Equatorial Goiás ativa 🚀"}
+
 @app.post("/extract")
 async def extract(file: UploadFile = File(...)):
     try:
+        # Salva PDF temporário
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
 
+        # Extrai o texto
         texto_extraido = extract_text_from_pdf(tmp_path)
         os.remove(tmp_path)
 
+        # Envia ao modelo
         response = client.chat.completions.create(
             model="gpt-5",
             messages=[
@@ -38,61 +40,15 @@ async def extract(file: UploadFile = File(...)):
                     "role": "system",
                     "content": (
                         "Você é um extrator especializado de dados de faturas da Equatorial Goiás. "
-                        "Sua tarefa é ler o texto abaixo e retornar um objeto JSON estruturado "
-                        "com todos os campos definidos no modelo 'faturaequatorial'."
+                        "Leia o texto e retorne um único objeto JSON estruturado com todos os campos esperados."
                     ),
                 },
                 {"role": "user", "content": texto_extraido},
             ],
             temperature=0.2,
-            max_tokens=2500,
+            max_tokens=2000,
         )
 
-        resultado = response.choices[0].message.content
-        return JSONResponse(content={"resultado": resultado})
-
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-# ✅ Adiciona rota raiz e healthcheck
-@app.get("/")
-async def root():
-    return {"status": "Extrator Equatorial Goiás ativo 🚀", "versao": "1.0"}
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
-        # Extrai o texto do PDF
-        texto_extraido = extract_text_from_pdf(tmp_path)
-
-        # Remove o arquivo após leitura
-        os.remove(tmp_path)
-
-        # Faz a chamada à API da OpenAI
-        response = client.chat.completions.create(
-            model="gpt-5",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Você é um extrator especializado de dados de faturas da Equatorial Goiás. "
-                        "Sua tarefa é ler o texto abaixo e retornar um objeto JSON estruturado "
-                        "com todos os campos definidos no modelo 'faturaequatorial'."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": texto_extraido,
-                },
-            ],
-            temperature=0.2,
-            max_tokens=2500,
-        )
-
-        # Retorna a resposta como JSON
         resultado = response.choices[0].message.content
         return JSONResponse(content={"resultado": resultado})
 
