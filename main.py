@@ -19,7 +19,15 @@ APP_VERSION = "1.1"
 
 # OpenAI Client (API nova)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-response = client.chat.completions.create(...)
+response = client.chat.completions.create(
+    model="gpt-5",
+    messages=[
+        {"role": "system", "content": "Você é um extrator especializado de dados de faturas da Equatorial Goiás."},
+        {"role": "user", "content": texto_extraido}
+    ],
+    temperature=0.2,
+    max_tokens=2500
+)
 
 # Carrega prompt base uma vez
 with open("prompt_equatorial_v1.txt", "r", encoding="utf-8") as f:
